@@ -1,0 +1,447 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <windows.h>
+#include<MMSystem.h>
+
+#define CLEAR "cls"
+#define max 20
+
+
+typedef struct items
+{
+	char itemCode[max];
+	char itemName[max];
+	int quantity;
+	float price;
+	char description[max];
+}Item;
+
+Item item;
+
+void options();
+int isCodeAvailable();
+void add_product();
+void delete_product();
+void display();
+void edit_product();
+void calculate_bill();
+void add_empolyees_ids();
+
+
+int main() {
+	
+	options();
+	
+	return 0;
+}
+
+int isCodeAvailable(char code[]) {
+	FILE *file;
+	file = fopen("Record.txt", "r");
+	if (file == NULL)
+	{
+		printf("\n\n\t\t\t\tError occurred while opening the file!\n");
+		exit(1);
+	}
+
+	// fread will keep reading , then it'll return 0
+	while (fread(&item, sizeof(item), 1, file))
+	{
+		if (strcmp(code, item.itemCode) == 0)
+		{
+			fclose(file);
+			return 1;
+		}
+	}
+	fclose(file);
+	return 0;
+}
+void add_product() {
+	char code[max];
+	FILE *file;
+	file = fopen("Record.txt", "a");
+	if (file == NULL)
+	{
+		printf("\n\n\t\t\t\tError occurred while opening the file!\n");
+		exit(1);
+	}
+
+	display();
+jump:
+	printf("\t\t\t\t\t    *****ADDING A PRODUCT*****\n\n");
+	printf("\t\t\t\t   Enter \"end\" if you want to go back to main menu\n\n");
+	printf("\t\t\t\t\t\tProduct Code:");
+	scanf("%s", code);
+
+	
+	if (strcmp(code, "end") == 0)
+	{
+		system(CLEAR);
+		options();
+	}
+
+	if (isCodeAvailable(code) == 1)
+	{
+		printf("\n\n\t\t\t\t\tProduct already exists!\n\n\n");
+
+		// Goes to jump 
+		goto jump;
+	}
+
+	// Copy the code into the item struct
+	strcpy(item.itemCode, code);
+
+	printf("\t\t\t\t\t\tProduct Name:");
+	scanf("%s", item.itemName);
+
+	printf("\t\t\t\t\t\tProduct Price:");
+	scanf("%f", &item.price);
+
+	printf("\t\t\t\t\t\tProduct Quantity:");
+	scanf("%d", &item.quantity);
+
+	printf("\t\t\t\t\t\tDescription:");
+	scanf("%s", item.description);
+
+	// Writing the item struct into the file
+	if (fwrite(&item, sizeof(item), 1, file))
+	{
+		printf("\n\t\t\t\t\t  Data has been stored!\n\n\n");
+	}
+	fclose(file);
+
+
+}
+
+void delete_product() {
+	FILE *file1, *file2;
+	char code[max];
+	file1 = fopen("record.txt", "r");
+	file2 = fopen("tmp.txt", "w");
+
+	if (file1 == NULL) {
+		printf("error");
+		exit(1);
+	}
+	if (file2 == NULL) {
+		printf("error");
+		fclose(file1);
+		exit(1);
+	}
+	display();
+jump:
+	printf("\t\t\t\t\t    *****DELETING A PRODUCT*****\n\n");
+	printf("\t\t\t\t   Enter \"end\" if you want to go back to main menu\n\n");
+	printf("\t\t\t\t   Enter the code of the product you want to delete: ");
+	scanf("%s", code);
+
+	if (strcmp(code, "end") == 0) {
+		system(CLEAR);
+		options();
+	}
+
+	if (isCodeAvailable(code) == 0)
+	{
+		printf("\n\n\t\t\t\t\t\tProduct doesn't exist!\n\n\n");
+
+		goto jump;
+	}
+
+	while (fread(&item, sizeof(item), 1, file1)) {
+		if (strcmp(code, item.itemCode) != 0) {
+			fwrite(&item, sizeof(item), 1, file2);
+		}
+	}
+	fclose(file1);
+	fclose(file2);
+
+	file1 = fopen("record.txt", "w");
+	file2 = fopen("tmp.txt", "r");
+
+	if (file1 == NULL) {
+		printf("failed to open file 1");
+		exit(1);
+	}
+	if (file2 == NULL) {
+		printf("failed to open file 2");
+		fclose(file1);
+		exit(1);
+	}
+	while (fread(&item, sizeof(item), 1, file2)) {
+		fwrite(&item, sizeof(item), 1, file1);
+	}
+
+	printf("\n\v\t\t\t\t\t   Product deleted sucessfully!\n\n\n\n");
+
+	fclose(file1);
+	fclose(file2);
+
+}
+
+
+
+
+void options() {
+	int choice,n=1;
+	do
+	{
+		printf("\t\t\t\t\t******DEPARTMENT STORE MANAGEMENT******");
+		printf("\n\t\t\t\t\t---------------------------------------");
+		printf("\n\t\t\t\t\t\t1. CALCULATE BILL");
+		printf("\n\t\t\t\t\t\t2. ADD A PRODUCT");
+		printf("\n\t\t\t\t\t\t3. DELETE A PRODUCT");
+		printf("\n\t\t\t\t\t\t4. EDIT A PRODUCT");
+		printf("\n\t\t\t\t\t\t5. DISPLAY STORE");
+		printf("\n\t\t\t\t\t\t6. ADD EMPLOYEE ID");
+		printf("\n\t\t\t\t\t\t7. EXIT THE RROGRAM");
+		printf("\n\t\t\t\t\t---------------------------------------\n");
+		printf("\t\t\t\t\tEnter your choice: ");
+		scanf_s("%d", &choice);
+
+		switch (choice)
+		{
+		case 1:
+			system(CLEAR);
+			calculate_bill();
+			break;
+		case 2:
+			system(CLEAR);
+			add_product();
+			break;
+		case 3:
+			system(CLEAR);
+			delete_product();
+			break;
+		case 4:
+			system(CLEAR);
+			edit_product();
+			break;
+		case 5:
+			n *= -1;
+			if (n == -1) {
+				system(CLEAR);
+				display();
+				break;
+			}
+			else {
+				system(CLEAR);
+				break;
+			}
+
+		
+		case 6:
+			system(CLEAR);
+			add_empolyees_ids();
+			break;
+		case 7:
+			system(CLEAR);
+			printf("\n\n\n\n\n\n\n\n\n\n");
+			printf("\n\n\n\t\t\t\t\t\t\tThanks!\n\n\n");
+			exit(0);
+			break;
+		default:
+			printf("\n\t\t\t\t\tWrong entry. Enter a number between 1 & 7\n\n\n");
+			break;
+		}
+	}while (choice != 7);
+}
+
+void display() {
+	int cnt = 0; 
+	FILE *file;
+	file = fopen("record.txt", "r");
+	if (file == NULL) {
+		printf("cant display");
+		exit(1);
+		}
+	printf("\t\t\t\t\t\t    AVAILABLE PRODUCTS\n");
+	printf("\t\t\t\t\t\t***************************\n");
+	printf("\t\t\t-------------------------------------------------------------------------\n");
+	printf("\t\t\t CODE\t||    NAME\t||     PRICE\t||   QUANTITY   ||  DESCRIPTION \n");
+	printf("\t\t\t-------------------------------------------------------------------------\n");
+
+	while (fread(&item, sizeof(item), 1, file)) {
+			printf("\t\t\t  %s\t||   %s\t||     %f\t||     %d\t||  %s\t\n", item.itemCode, item.itemName, item.price, item.quantity, item.description);
+			cnt++;
+		}
+
+	if (cnt == 0) {
+		system(CLEAR);
+		printf("no products is available");
+		}
+		fclose(file);
+		
+}
+		
+		
+		
+
+void edit_product() {
+	FILE *file1, *file2;
+	char code[max];
+	display();
+	jump:
+	printf("\t\t\t\t\t    *****UPDATING A PRODUCT*****\n\n");
+	printf("\t\t\t\t   Enter \"end\" if you want to go back to main menu\n\n");
+	printf("\t\t\t\t   Enter the code of the product you want to edit: ");
+	scanf("%s", code);
+
+	if (strcmp(code, "end") == 0) {
+		system(CLEAR);
+		options();
+	}
+
+	if (isCodeAvailable(code) == 0) {
+
+		printf("\n\n\t\t\t\t\t\tProduct doesn't exist!\n\n\n");
+		goto jump;
+	}
+
+	file1 = fopen("record.txt", "r");
+	file2 = fopen("tmp.txt", "w");
+
+	if (file1 == NULL) {
+		printf("failed to open file 1 in edit");
+		exit(1);
+	}
+	if (file2 == NULL) {
+		printf("failed to open file 2 in edit");
+		fclose(file1);
+		exit(1);
+	}
+
+	while (fread(&item, sizeof(item), 1, file1)) {
+		if(strcmp(code, item.itemCode) != 0) {
+			fwrite(&item, sizeof(item), 1, file2);
+		}
+		else
+		{
+
+			printf("\t\t\t\t\t\tProduct Name:");
+			scanf("%s", item.itemName);
+
+			printf("\t\t\t\t\t\tProduct Price:");
+			scanf("%f", &item.price);
+
+			printf("\t\t\t\t\t\tProduct Quantity:");
+			scanf("%d", &item.quantity);
+
+			printf("\t\t\t\t\t\tDescription:");
+			scanf("%s", item.description);
+			
+			fwrite(&item, sizeof(item), 1, file2);
+		}
+	}
+
+	fclose(file1);
+	fclose(file2);
+
+	file1 = fopen("record.txt", "w");
+	file2 = fopen("tmp.txt", "r");
+
+	if (file1 == NULL) {
+		printf("error in opening file1");
+		exit(1);
+	}
+	if (file2 == NULL) {
+		printf("error in opening file2");
+		fclose(file1);
+		exit(1);
+	}
+
+
+	while (fread(&item, sizeof(item), 1, file2)) {
+		fwrite(&item, sizeof(item), 1, file1);
+	}
+	printf("\n\n\t\t\t\t\tData has been updated successfully\n\n\n");
+
+	fclose(file1);
+	fclose(file2);
+}
+
+void calculate_bill() {
+	int q = 0, counter = 0;
+	FILE *file1, *file2;
+	float total = 0, totalbill = 0;
+	char code[max];
+
+	printf("\t\t\t--------------------------------------------------------------------------------------\t\t\t");
+
+	printf("\t\t\t N.\t||    CODE\t||    NAME\t||     PRICE\t||   QUANTITY   ||  TOTAL \t\t\t");
+	while (1) {//while 1 3ashan tfdl t3eed el loop le7ad ma tla2e break
+
+		printf("enter 'end' if you want to check out or exit\n");
+
+		printf("\t\t\tenter code\n");
+		scanf("%s", code);
+
+		if (strcmp(code, "end") == 0) {
+			printf("\t\t\t\n Total bill =%f$", totalbill);
+			PlaySound(TEXT("cashsound.wav"), NULL, SND_SYNC);
+			break;
+		}
+
+	jump:
+		printf("enter quantity");
+		scanf("%d", &q);
+		if (q < item.quantity) {
+
+
+
+			file1 = fopen("record.txt", "r");
+			file2 = fopen("tmpfile.txt", "w");
+
+			while (fread(&item, sizeof(item), 1, file1)) {
+				if (strcmp(code, item.itemCode) == 0) {
+					total = q*item.price;
+					totalbill += total;
+					item.quantity -= q;
+					printf("\t\t\t   %d\t||     %s\t||   %s\t||     %f\t||      %d\t||   %f\n\t\t\t", counter + 1, item.itemCode, item.itemName, item.price, q, total);
+					counter++;
+					fwrite(&item, sizeof(item), 1, file2);
+				}
+
+				else {
+					fwrite(&item, sizeof(item), 1, file2);
+				}
+			}
+			fclose(file1);
+			fclose(file2);
+
+			file2 = fopen("tmpfile.txt", "r");
+			file1 = fopen("record.txt", "w");
+
+			while (fread(&item, sizeof(item), 1, file2)) {
+				fwrite(&item, sizeof(item), 1, file1);
+			}
+			fclose(file1);
+			fclose(file2);
+		}
+	}
+}
+
+void add_empolyees_ids() {
+	int n, *arr;
+	printf("enter size of the table");
+	scanf_s("%d", &n);
+	arr = (int*)malloc(n*sizeof(int));
+	for (int i = 0;i < n;i++) {
+		printf("enter id");
+		scanf("%d", &arr[i]);
+	}
+	for (int i = 0;i < n;i++) {
+		for (int j = 0;j < n - i - 1;j++) {
+			if (arr[j] > arr[j + 1]) {
+				int tmp = arr[j];
+				arr[j] = arr[j + 1];
+				arr[j + 1] = tmp;
+			}
+		}
+	}
+	system(CLEAR);
+	for (int i = 0;i < n;i++) {
+		printf("%d\n", arr[i]);
+	}
+	
+}
